@@ -173,19 +173,43 @@ jobs:
           
           echo "[+] Kprobe configs added successfully."
 
-      - name: 🔧 Fix SELinux flask.h include path for Kernel 4.19 (Global Fix)
+      - name: 🔧 Fix SELinux flask.h include path (Copy Generated File)
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
           
-          echo "[+] Fixing flask.h include paths globally..."
+          echo "[+] Fixing flask.h include path..."
           
-          find security/selinux/include/ -type f -name "*.h" -exec sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' {} \;
+          # Kembalikan semua include ke "flask.h" (dengan quote)
+          find security/selinux/include/ -type f -name "*.h" -exec sed -i 's|#include <security/selinux/flask.h>|#include "flask.h"|g' {} \;
+          sed -i 's|#include <security/selinux/flask.h>|#include "flask.h"|g' security/selinux/include/security.h 2>/dev/null || true
+          sed -i 's|#include <security/selinux/flask.h>|#include "flask.h"|g' security/selinux/include/objsec.h 2>/dev/null || true
           
-          sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' security/selinux/include/security.h 2>/dev/null || true
-          sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' security/selinux/include/objsec.h 2>/dev/null || true
+          # Buat script yang akan dijalankan SETELAH flask.h di-generate
+          cat > /tmp/fix_flask.sh <<'SCRIPT'
+          #!/bin/bash
+          cd $GITHUB_WORKSPACE/device_kernel
           
-          echo "[+] Verified fixes:"
-          grep -n "flask.h" security/selinux/include/*.h || true
+          # Tunggu sampai flask.h di-generate (maksimal 30 detik)
+          for i in {1..30}; do
+            if [ -f "out/security/selinux/flask.h" ]; then
+              echo "[+] flask.h generated, copying to include folder..."
+              cp out/security/selinux/flask.h security/selinux/include/flask.h
+              echo "[+] flask.h copied successfully"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "[-] Warning: flask.h not found in out/security/selinux/"
+          exit 1
+          SCRIPT
+          
+          chmod +x /tmp/fix_flask.sh
+          
+          # Jalankan script di background
+          nohup /tmp/fix_flask.sh > /tmp/fix_flask.log 2>&1 &
+          
+          echo "[+] Flask.h fix script started in background"
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
