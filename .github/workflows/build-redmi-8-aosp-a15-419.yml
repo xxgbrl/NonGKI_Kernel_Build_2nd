@@ -67,8 +67,8 @@ env:
   GENERATE_CHIP: "xiaomi-sdm439"
   BUILD_DEBUGGER: "false"
   SKIP_PATCH: "true"
-  BUILD_OTHER_CONFIG: "true"
-  MERGE_CONFIG_FILES: "vdso_fix.config"
+  BUILD_OTHER_CONFIG: "false"
+  MERGE_CONFIG_FILES: ""
   FREE_MORE_SPACE: "false"
 
 jobs:
