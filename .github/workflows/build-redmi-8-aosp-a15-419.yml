@@ -109,10 +109,15 @@ jobs:
       - name: 🛡️ Patch Kernel of NoMount
         uses: ./.github/workflows/patch-nomount
 
-      - name: 📝 Copy vdso_fix.config to kernel source
+      - name: 🔧 Patch Makefile to skip vdso32
         run: |
-          cp $GITHUB_WORKSPACE/vdso_fix.config $GITHUB_WORKSPACE/device_kernel/arch/arm64/configs/vdso_fix.config
-          echo "[+] vdso_fix.config copied successfully"
+          cd $GITHUB_WORKSPACE/device_kernel
+          
+          cp arch/arm64/Makefile arch/arm64/Makefile.backup
+          
+          sed -i 's/^vdso_prepare:/# vdso_prepare: # Disabled for Clang compatibility/' arch/arm64/Makefile
+          
+          echo "[+] Makefile patched to skip vdso32 compilation"
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
