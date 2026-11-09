@@ -24,7 +24,7 @@ env:
   GCC_32_BRANCH : ""
 
   DEFCONFIG_SOURCE: ""
-  DEFCONFIG_NAME : ""
+  DEFCONFIG_NAME : "lineageos_mi439_defconfig"
   
   DEFCONFIG_FROM_BOOT: "true"
   
