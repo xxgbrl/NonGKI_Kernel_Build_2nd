@@ -32,7 +32,7 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: "https://github.com/xxgbrl/NonGKI_Kernel_Build_2nd/releases/download/v4.4.2-a16/boot.img"
 
   KERNELSU_AUTO_GET : "true"
-  KERNELSU_AUTO_FORK : "sukisu" 
+  KERNELSU_AUTO_FORK : "next" 
 
   SUSFS_ENABLE : true
   SUSFS_FIXED : true
