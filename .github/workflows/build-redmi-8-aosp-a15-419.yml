@@ -109,18 +109,17 @@ jobs:
       - name: 🛡️ Patch Kernel of NoMount
         uses: ./.github/workflows/patch-nomount
 
-      - name: 🔧 Disable vdso32 compilation
+      - name: 🔧 Disable vdso32 compilation completely
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          
-          if [ -f arch/arm64/Makefile.backup ]; then
-            cp arch/arm64/Makefile.backup arch/arm64/Makefile
-          fi
           
           echo "# Disabled for Clang compatibility" > arch/arm64/kernel/vdso32/Makefile
           echo "obj-y :=" >> arch/arm64/kernel/vdso32/Makefile
           
-          echo "[+] vdso32 Makefile emptied - no 32-bit VDSO will be compiled"
+          mkdir -p include/generated
+          echo "/* Dummy file - vdso32 disabled */" > include/generated/vdso32-offsets.h
+          
+          echo "[+] vdso32 completely disabled with dummy offsets file"
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
