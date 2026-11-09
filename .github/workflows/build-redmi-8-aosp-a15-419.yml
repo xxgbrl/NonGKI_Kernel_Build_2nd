@@ -112,14 +112,46 @@ jobs:
       - name: 🔧 Disable vdso32 compilation completely
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          
+
+          # Kosongkan vdso32 Makefile agar tidak mengkompilasi apa-apa
           echo "# Disabled for Clang compatibility" > arch/arm64/kernel/vdso32/Makefile
           echo "obj-y :=" >> arch/arm64/kernel/vdso32/Makefile
-          
+
+          # Buat file dummy vdso32-offsets.h
           mkdir -p include/generated
           echo "/* Dummy file - vdso32 disabled */" > include/generated/vdso32-offsets.h
-          
+
           echo "[+] vdso32 completely disabled with dummy offsets file"
+
+      - name: 🧩 Fix NO_HZ scheduler config
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+
+          DEFCONFIG="arch/arm64/configs/${DEFCONFIG_NAME}"
+
+          echo "[+] Fixing NO_HZ config in $DEFCONFIG"
+          test -f "$DEFCONFIG"
+
+          grep -v -E '^(CONFIG_NO_HZ|CONFIG_NO_HZ_IDLE|CONFIG_NO_HZ_FULL|CONFIG_NO_HZ_COMMON|CONFIG_HZ_PERIODIC|CONFIG_HIGH_RES_TIMERS|CONFIG_TICK_ONESHOT|# CONFIG_NO_HZ|# CONFIG_HZ_PERIODIC|# CONFIG_HIGH_RES_TIMERS|# CONFIG_TICK_ONESHOT)' \
+            "$DEFCONFIG" > "$DEFCONFIG.tmp"
+          mv "$DEFCONFIG.tmp" "$DEFCONFIG"
+
+          cat >> "$DEFCONFIG" <<'EOF'
+
+          # NO_HZ scheduler fix
+          CONFIG_TICK_ONESHOT=y
+          CONFIG_HIGH_RES_TIMERS=y
+          CONFIG_NO_HZ=y
+          CONFIG_NO_HZ_COMMON=y
+          CONFIG_NO_HZ_IDLE=y
+          # CONFIG_NO_HZ_FULL is not set
+          # CONFIG_HZ_PERIODIC is not set
+          EOF
+
+          sed -i 's/^          //' "$DEFCONFIG"
+
+          echo "[+] Current NO_HZ config:"
+          grep -E 'CONFIG_NO_HZ|CONFIG_HZ_PERIODIC|CONFIG_HIGH_RES_TIMERS|CONFIG_TICK_ONESHOT' "$DEFCONFIG" || true
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
