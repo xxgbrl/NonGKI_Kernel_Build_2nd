@@ -13,7 +13,7 @@ env:
 
   KERNEL_SOURCE : "https://github.com/LineageOS/android_kernel_xiaomi_sdm439.git"
   
-  KERNEL_BRANCH : "lineage-23"
+  KERNEL_BRANCH : "lineage-23.1"
 
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
   CLANG_BRANCH : "master"
