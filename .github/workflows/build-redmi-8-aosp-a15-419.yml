@@ -173,13 +173,19 @@ jobs:
           
           echo "[+] Kprobe configs added successfully."
 
-      - name: 🔧 Fix SELinux flask.h include path for Kernel 4.19
+      - name: 🔧 Fix SELinux flask.h include path for Kernel 4.19 (Global Fix)
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
           
-          sed -i 's|#include "flask.h"|#include "../flask.h"|g' security/selinux/include/objsec.h
+          echo "[+] Fixing flask.h include paths globally..."
           
-          echo "[+] Fixed flask.h include path in objsec.h"
+          find security/selinux/include/ -type f -name "*.h" -exec sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' {} \;
+          
+          sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' security/selinux/include/security.h 2>/dev/null || true
+          sed -i 's|#include "flask.h"|#include <security/selinux/flask.h>|g' security/selinux/include/objsec.h 2>/dev/null || true
+          
+          echo "[+] Verified fixes:"
+          grep -n "flask.h" security/selinux/include/*.h || true
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
