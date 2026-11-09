@@ -34,8 +34,8 @@ env:
   KERNELSU_AUTO_GET : "true"
   KERNELSU_AUTO_FORK : "next" 
 
-  SUSFS_ENABLE : true
-  SUSFS_FIXED : true
+  SUSFS_ENABLE : false
+  SUSFS_FIXED : false
 
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
@@ -152,6 +152,30 @@ jobs:
 
           echo "[+] Current NO_HZ config:"
           grep -E 'CONFIG_NO_HZ|CONFIG_HZ_PERIODIC|CONFIG_HIGH_RES_TIMERS|CONFIG_TICK_ONESHOT' "$DEFCONFIG" || true
+
+      - name: 🔧 Ensure Official KernelSU Kprobe Configs
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          DEFCONFIG="arch/arm64/configs/${DEFCONFIG_NAME}"
+          
+          echo "[+] Adding official KernelSU kprobe configs to $DEFCONFIG"
+          
+          grep -v -E '^(CONFIG_KSU|CONFIG_KPROBES|CONFIG_KPROBE_EVENTS|CONFIG_KSU_KPROBE_HOOKS|# CONFIG_KSU|# CONFIG_KPROBES|# CONFIG_KPROBE_EVENTS|# CONFIG_KSU_KPROBE_HOOKS)' "$DEFCONFIG" > "$DEFCONFIG.tmp"
+          mv "$DEFCONFIG.tmp" "$DEFCONFIG"
+          
+          cat >> "$DEFCONFIG" <<'EOF'
+          
+          CONFIG_KSU=y
+          CONFIG_KPROBES=y
+          CONFIG_KPROBE_EVENTS=y
+          CONFIG_KSU_KPROBE_HOOKS=y
+          EOF
+          
+          echo "[+] Kprobe configs added successfully."
+          grep -E 'CONFIG_KSU|CONFIG_KPROBES' "$DEFCONFIG"
+
+      - name: 🚀 Build Process
+        uses: ./.github/workflows/build-process
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
