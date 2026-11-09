@@ -109,6 +109,11 @@ jobs:
       - name: 🛡️ Patch Kernel of NoMount
         uses: ./.github/workflows/patch-nomount
 
+      - name: 📝 Copy vdso_fix.config to kernel source
+        run: |
+          cp $GITHUB_WORKSPACE/vdso_fix.config $GITHUB_WORKSPACE/device_kernel/arch/arm64/configs/vdso_fix.config
+          echo "[+] vdso_fix.config copied successfully"
+
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
